@@ -118,7 +118,7 @@ BaseServer:
   entry is processed by a RequestHandlerClass.
 
 """
-
+# python中的socketserver模块，主要是用来提供服务器类，并且提供异步处理的能力
 # Author of the BaseServer patch: Luke Kenneth Casson Leighton
 
 __version__ = "0.4"
@@ -208,13 +208,13 @@ class BaseServer:
 
     timeout = None # 类属性
 
-    def __init__(self, server_address, RequestHandlerClass,modules=None):
+    def __init__(self, server_address, RequestHandlerClass):
         """Constructor.  May be extended, do not override."""
         self.server_address = server_address
         self.RequestHandlerClass = RequestHandlerClass
         self.__is_shut_down = threading.Event()
         self.__shutdown_request = False
-        self.modules = modules
+
 
     def server_activate(self):
         """Called by constructor to activate the server.
@@ -224,7 +224,7 @@ class BaseServer:
         """
         pass
 
-    def serve_forever(self,poll_interval=0.5,modules=None):
+    def serve_forever(self,poll_interval=0.5):
         """Handle one request at a time until shutdown.
 
         Polls for shutdown every poll_interval seconds. Ignores
@@ -241,8 +241,6 @@ class BaseServer:
                 selector.register(self, selectors.EVENT_READ)
 
                 while not self.__shutdown_request:
-                    if modules:
-                        UpdatePoint(modules)
                     ready = selector.select(poll_interval)
                     if ready:
                         self._handle_request_noblock()
@@ -302,8 +300,6 @@ class BaseServer:
             selector.register(self, selectors.EVENT_READ)
 
             while True:
-                if self.modules:
-                     UpdatePoint(self.modules,exclude)
                 ready = selector.select(timeout)
                 if ready:
                     return self._handle_request_noblock()
@@ -469,7 +465,7 @@ class TCPServer(BaseServer):
                 self.server_close()
                 raise
 
-    def server_bind(self):
+    def server_bind(self): # 绑定端口
         """Called by constructor to bind the socket.
 
         May be overridden.
@@ -480,7 +476,7 @@ class TCPServer(BaseServer):
         self.socket.bind(self.server_address)
         self.server_address = self.socket.getsockname()
 
-    def server_activate(self):
+    def server_activate(self): # 监听 
         """Called by constructor to activate the server.
 
         May be overridden.
@@ -488,7 +484,7 @@ class TCPServer(BaseServer):
         """
         self.socket.listen(self.request_queue_size)
 
-    def server_close(self):
+    def server_close(self): # 关闭socket
         """Called to clean-up the server.
 
         May be overridden.
@@ -690,7 +686,7 @@ class BaseRequestHandler:
     constructor sets the instance variables request, client_address
     and server, and then calls the handle() method.  To implement a
     specific service, all you need to do is to derive a class which
-    defines a handle() method.
+    defines a handle() method. #需要派生一个带有handle()方法的类
 
     The handle() method can find the request as self.request, the
     client address as self.client_address, and the server (in case it
@@ -728,7 +724,7 @@ class BaseRequestHandler:
 # When the handle() method returns, wfile is flushed properly
 
 
-class StreamRequestHandler(BaseRequestHandler):
+class StreamRequestHandler(BaseRequestHandler): # self.rfile用来读取数据的句柄，而self.wfile是用来发送消息的句柄
 
     """Define self.rfile and self.wfile for stream sockets."""
 
